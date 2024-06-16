@@ -1,0 +1,13 @@
+[package]
+name = "wikipedia-to-markdown"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+htmd = "*"
+reqwest = { version = "*", features = ["json"] }
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+tokio = { version = "*", features = ["full"] }
+url-builder = "*"
+urlencoding = "*"
