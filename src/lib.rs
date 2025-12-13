@@ -102,8 +102,8 @@ impl HtmlToMarkdown {
         HtmlToMarkdownBuilder::new()
     }
 
-    /// Convert HTML to Markdown.
-    pub fn convert(&self, html: &str) -> std::io::Result<String> {
+    /// Convert HTML to a DOM tree.
+    pub fn html_to_tree(&self, html: &str) -> std::io::Result<Rc<Node>> {
         let dom = parse_document(
             RcDom::default(),
             ParseOpts {
@@ -117,16 +117,14 @@ impl HtmlToMarkdown {
         .from_utf8()
         .read_from(&mut html.as_bytes())?;
 
+        Ok(dom.document)
+    }
+
+    /// Convert a DOM tree to Markdown.
+    pub fn tree_to_markdown(&self, tree: &Rc<Node>) -> std::io::Result<String> {
         let mut content = String::new();
 
-        walk_node(
-            &dom.document,
-            &mut content,
-            &self.handlers,
-            None,
-            true,
-            false,
-        );
+        walk_node(tree, &mut content, &self.handlers, None, true, false);
 
         let mut content = content.trim_matches(|ch| ch == '\n').to_string();
 
@@ -141,6 +139,11 @@ impl HtmlToMarkdown {
         content.push_str(append.trim_end_matches('\n'));
 
         Ok(content)
+    }
+
+    /// Convert HTML to Markdown.
+    pub fn convert(&self, html: &str) -> std::io::Result<String> {
+        self.tree_to_markdown(&self.html_to_tree(html)?)
     }
 }
 
