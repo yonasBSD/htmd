@@ -267,7 +267,7 @@ fn trim_buffer_end(buffer: &mut [String]) {
         if trimmed.len() == content.len() {
             break;
         }
-        *content = trimmed.to_string();
+        content.truncate(trimmed.len());
     }
 }
 
@@ -277,7 +277,7 @@ fn trim_buffer_end_spaces(buffer: &mut [String]) {
         if trimmed.len() == content.len() {
             break;
         }
-        *content = trimmed.to_string();
+        content.truncate(trimmed.len());
     }
 }
 
