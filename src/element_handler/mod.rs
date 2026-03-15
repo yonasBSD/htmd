@@ -329,24 +329,23 @@ impl Handlers for ElementHandlers {
     }
 
     fn handle(&self, node: &Rc<Node>) -> Option<HandlerResult> {
-        let mut buffer = Vec::new();
-        let markdown_translated = walk_node(node, &mut buffer, self, None, true, false);
-        let md = buffer.join("");
+        let mut output = String::new();
+        let markdown_translated = walk_node(node, &mut output, self, None, true, false);
         Some(HandlerResult {
-            content: md,
+            content: output,
             markdown_translated,
         })
     }
 
     fn walk_children(&self, node: &Rc<Node>) -> HandlerResult {
-        let mut buffer = Vec::new();
+        let mut output = String::new();
         let tag = crate::node_util::get_node_tag_name(node);
         let is_block = tag.is_some_and(crate::dom_walker::is_block_element);
         let is_pre = tag.is_some_and(|t| t == "pre" || t == "code") || is_inside_pre(node);
         let markdown_translated =
-            crate::dom_walker::walk_children(node, &mut buffer, self, is_block, is_pre);
+            crate::dom_walker::walk_children(node, &mut output, self, is_block, is_pre);
         HandlerResult {
-            content: buffer.join(""),
+            content: output,
             markdown_translated,
         }
     }

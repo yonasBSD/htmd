@@ -1,3 +1,5 @@
 /target
 output_*.md
-flamegraph.svg
+*.svg
+*.log
+*.estimates.json

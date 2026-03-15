@@ -2,7 +2,7 @@ import { $ } from "bun";
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as os from "os";
-import toml from "toml";
+import cargoManifest from "../Cargo.toml" with { type: "toml" };
 
 if (!(await fs.exists(path.join(process.cwd(), "Cargo.toml")))) {
   throw new Error("Please run this script in the project's root directory.");
@@ -39,9 +39,7 @@ function osMemoryGB(): string {
 }
 
 async function libVersion(): Promise<string> {
-  const tomlString = (await fs.readFile("Cargo.toml")).toString();
-  const cargo = toml.parse(tomlString);
-  return cargo.package.version;
+  return cargoManifest.package.version;
 }
 
 async function writeResultReadme(result: string) {

@@ -1,0 +1,31 @@
+commit	runtime_ms	status	description
+48cbdeb	17.017	keep	baseline
+48cbdeb	17.101	discard	avoid eager text-node allocations in dom walker
+48cbdeb	17.342	discard	trim joined output in place in convert()
+48cbdeb	17.275	discard	replace temporary parent-tag vec allocations with slices
+48cbdeb	17.502	discard	iterate table children by borrow instead of cloned child vectors
+48cbdeb	17.368	discard	borrow href/title in anchor handler and escape lazily
+48cbdeb	17.415	keep	baseline average of 3 sequential runs (16.995, 17.581, 17.668)
+48cbdeb	17.463	discard	reverify: avoid eager text-node allocations in dom walker (3-run avg 17.020, 17.742, 17.626)
+48cbdeb	17.877	discard	reverify: trim joined output in place in convert() (3-run avg 17.758, 17.895, 17.977)
+48cbdeb	17.986	discard	reverify: replace temporary parent-tag vec allocations with slices (3-run avg 17.872, 18.037, 18.048)
+48cbdeb	18.057	discard	reverify: iterate table children by borrow instead of cloned child vectors (3-run avg 17.848, 18.240, 18.084)
+48cbdeb	17.930	discard	reverify: borrow href/title in anchor handler and escape lazily (3-run avg 17.834, 17.913, 18.044)
+48cbdeb	18.393	discard	replace hot-path join("") calls with preallocated String concatenation helper
+48cbdeb	18.913	discard	reorder can_combine() to reject non-matching inline nodes before child borrows
+48cbdeb	18.358	discard	profile-guided: add pure-mode fast path and lower-allocation assembly in anchor handler
+48cbdeb	16.946	keep	skip child-combine mutation for single-child nodes and inline tag checks directly in walk_children
+d300ee4	17.585	discard	use slices instead of per-call parent-tag Vec allocations in table/head handlers
+d300ee4	17.442	keep	baseline average of 3 sequential runs after walk_children hot-path optimization (17.563, 17.293, 17.471)
+d300ee4	17.347	keep	baseline average of 3 sequential median-based runs after benchmark harness update (17.011, 17.153, 17.877; cv 2.19%)
+0269d35	17.643	keep	baseline average of 3 sequential median-based runs before new experiments (18.147, 17.468, 17.316; cv 2.05%)
+66e3f90	17.258	keep	trim trailing buffer whitespace in place instead of rebuilding strings
+66e3f90	17.282	discard	borrow table child lists directly instead of cloning child node vectors
+59a7130	16.586	keep	borrow text-node tendrils through escaping and whitespace compression
+59a7130	16.596	discard	use byte-based ASCII checks in escape_if_needed fast path
+8f5a71c	16.368	keep	fast-path plain text nodes that need no escaping or whitespace compression
+8f5a71c	16.465	discard	count leading and trailing fragment newlines with byte scans
+62eb1c2	16.185	keep	use a shared String sink during DOM walking instead of fragment vectors
+62eb1c2	16.180	discard	replace DOM mutation in can_combine with read-only temporary merged inline nodes
+2cd0014	15.808	keep	reduce anchor handler string churn in append/title/link formatting
+2cd0014	15.964	discard	simplify ordered-list assembly by mutating collected child strings in place
