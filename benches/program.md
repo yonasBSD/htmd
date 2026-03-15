@@ -14,7 +14,7 @@ To set up a new run, work with the user to:
    - `benches/convert_bench.rs` for the benchmark harness. Do not change it unless the human explicitly asks.
    - `src/**/*.rs` for the implementation you are optimizing.
    - `tests/**/*.rs` for expected behavior.
-4. Initialize `benches/results.tsv` with the header row if it does not exist. Do not commit `benches/results.tsv`.
+4. Initialize `benches/results.tsv` with the header row if it does not exist. Keep it up to date as the experiment log for the branch.
 5. Confirm setup looks good and begin experimentation immediately.
 
 Once setup is complete, do not wait for further confirmation.
@@ -51,7 +51,7 @@ Soft constraints:
 - `benches/convert_bench.rs`
 - The HTML benchmark fixture under `examples/page-to-markdown/html/`
 - Tests, unless a test update is strictly required to reflect behavior the human requested
-- `benches/results.tsv` should stay untracked
+- `benches/results.tsv` is the canonical experiment log for the branch and may be committed alongside code changes
 
 ## Benchmark Commands
 

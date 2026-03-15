@@ -3,5 +3,3 @@ output_*.md
 *.svg
 *.log
 *.estimates.json
-results.tsv
-!benches/results.tsv

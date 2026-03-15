@@ -80,7 +80,7 @@ def read_metric(run_idx: int) -> float:
     estimates = json.loads(estimates_path.read_text())
     selected = estimates.get(metric, {})
     point_estimate = selected.get("point_estimate")
-    if not point_estimate:
+    if point_estimate is None:
         point_estimate = estimates["mean"]["point_estimate"]
     return point_estimate / 1_000_000.0
 

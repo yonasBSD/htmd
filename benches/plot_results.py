@@ -37,9 +37,10 @@ def render_plot(df: pd.DataFrame, output_path: Path) -> None:
 
     baseline = float(valid.iloc[0]["runtime_ms"])
     best = float(kept["runtime_ms"].min() if not kept.empty else valid["runtime_ms"].min())
-    y_pad = max((baseline - best) * 0.15, 0.05)
+    worst = float(valid["runtime_ms"].max())
+    y_pad = max((worst - best) * 0.15, 0.05)
     y_min = best - y_pad
-    y_max = baseline + y_pad
+    y_max = worst + y_pad
     if y_max <= y_min:
         y_max = y_min + 1.0
 
