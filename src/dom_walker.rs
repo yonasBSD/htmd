@@ -40,13 +40,27 @@ pub(crate) fn walk_node(
                 };
                 buffer.push(text.into_owned());
             } else {
+                let last_ends_with_space = buffer.last().is_some_and(|text| text.ends_with(' '));
+                if is_plain_text(text) {
+                    let text = if trim_leading_spaces || (text.starts_with(' ') && last_ends_with_space)
+                    {
+                        text.trim_start_matches(' ')
+                    } else {
+                        text
+                    };
+                    if !text.is_empty() {
+                        buffer.push(text.to_owned());
+                    }
+                    return markdown_translated;
+                }
+
                 // Handle other elements or texts
                 let text = escape_if_needed(Cow::Borrowed(text));
                 let text = compress_whitespace(text.as_ref());
 
                 let to_add = if trim_leading_spaces
                     || (text.chars().next().is_some_and(|ch| ch == ' ')
-                        && buffer.last().is_some_and(|text| text.ends_with(' ')))
+                        && last_ends_with_space)
                 {
                     // We can't compress spaces between two text blocks/elements, so we
                     // compress them here by trimming the leading space of current text
@@ -99,6 +113,34 @@ pub(crate) fn walk_node(
     }
 
     markdown_translated
+}
+
+fn is_plain_text(text: &str) -> bool {
+    let bytes = text.as_bytes();
+    let Some(&first) = bytes.first() else {
+        return true;
+    };
+
+    if matches!(first, b'=' | b'~' | b'>' | b'-' | b'+' | b'#' | b'0'..=b'9') {
+        return false;
+    }
+
+    let mut previous_was_space = false;
+    for &byte in bytes {
+        match byte {
+            b'\\' | b'*' | b'_' | b'`' | b'[' | b']' | b'<' => return false,
+            b' ' => {
+                if previous_was_space {
+                    return false;
+                }
+                previous_was_space = true;
+            }
+            b'\t' | b'\n' | b'\r' | 0x0C | 0x0B => return false,
+            _ => previous_was_space = false,
+        }
+    }
+
+    true
 }
 
 pub(crate) fn walk_children(
