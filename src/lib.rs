@@ -117,18 +117,18 @@ impl HtmlToMarkdown {
         .from_utf8()
         .read_from(&mut html.as_bytes())?;
 
-        let mut buffer: Vec<String> = Vec::new();
+        let mut content = String::new();
 
         walk_node(
             &dom.document,
-            &mut buffer,
+            &mut content,
             &self.handlers,
             None,
             true,
             false,
         );
 
-        let mut content = buffer.join("").trim_matches(|ch| ch == '\n').to_string();
+        let mut content = content.trim_matches(|ch| ch == '\n').to_string();
 
         let mut append = String::new();
         for handler in &self.handlers.handlers {

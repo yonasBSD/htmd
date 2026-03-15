@@ -15,7 +15,7 @@ use super::{
 
 pub(crate) fn walk_node(
     node: &Rc<Node>,
-    buffer: &mut Vec<String>,
+    output: &mut String,
     handlers: &ElementHandlers,
     parent_tag: Option<&str>,
     trim_leading_spaces: bool,
@@ -24,8 +24,8 @@ pub(crate) fn walk_node(
     let mut markdown_translated = true;
     match node.data {
         NodeData::Document => {
-            let _ = walk_children(node, buffer, handlers, true, false);
-            trim_buffer_end(buffer);
+            let _ = walk_children(node, output, handlers, true, false);
+            trim_output_end(output);
         }
 
         NodeData::Text { ref contents } => {
@@ -38,9 +38,9 @@ pub(crate) fn walk_node(
                 } else {
                     Cow::Borrowed(text)
                 };
-                buffer.push(text.into_owned());
+                output.push_str(text.as_ref());
             } else {
-                let last_ends_with_space = buffer.last().is_some_and(|text| text.ends_with(' '));
+                let last_ends_with_space = output.ends_with(' ');
                 if is_plain_text(text) {
                     let text = if trim_leading_spaces || (text.starts_with(' ') && last_ends_with_space)
                     {
@@ -49,7 +49,7 @@ pub(crate) fn walk_node(
                         text
                     };
                     if !text.is_empty() {
-                        buffer.push(text.to_owned());
+                        output.push_str(text);
                     }
                     return markdown_translated;
                 }
@@ -65,12 +65,12 @@ pub(crate) fn walk_node(
                     // We can't compress spaces between two text blocks/elements, so we
                     // compress them here by trimming the leading space of current text
                     // content.
-                    text.trim_start_matches(' ').to_string()
+                    text.trim_start_matches(' ')
                 } else {
-                    text.into_owned()
+                    text.as_ref()
                 };
                 if !to_add.is_empty() {
-                    buffer.push(to_add);
+                    output.push_str(to_add);
                 }
             }
         }
@@ -95,17 +95,16 @@ pub(crate) fn walk_node(
             if let Some(res) = res {
                 markdown_translated = res.markdown_translated;
                 if !res.content.is_empty() || !is_head {
-                    let content = normalize_content_for_buffer(buffer.last(), res.content, is_pre);
-                    if !content.is_empty() {
-                        buffer.push(content);
-                    }
+                    append_normalized_content(output, res.content, is_pre);
                 }
             }
         }
 
         NodeData::Comment { ref contents } => {
             if handlers.options.translation_mode == TranslationMode::Faithful {
-                buffer.push(format!("<!--{}-->", contents));
+                output.push_str("<!--");
+                output.push_str(contents);
+                output.push_str("-->");
             }
         }
         NodeData::Doctype { .. } => {}
@@ -145,7 +144,7 @@ fn is_plain_text(text: &str) -> bool {
 
 pub(crate) fn walk_children(
     node: &Rc<Node>,
-    buffer: &mut Vec<String>,
+    output: &mut String,
     handlers: &ElementHandlers,
     is_parent_block_element: bool,
     is_pre: bool,
@@ -190,14 +189,14 @@ pub(crate) fn walk_children(
 
         if is_block {
             // Trim trailing spaces for the previous element
-            trim_buffer_end_spaces(buffer);
+            trim_output_end_spaces(output);
         }
 
-        let buffer_len = buffer.len();
+        let output_len = output.len();
 
-        markdown_translated &= walk_node(child, buffer, handlers, tag, trim_leading_spaces, is_pre);
+        markdown_translated &= walk_node(child, output, handlers, tag, trim_leading_spaces, is_pre);
 
-        if buffer.len() > buffer_len {
+        if output.len() > output_len {
             // Something was appended, update the flag
             trim_leading_spaces = is_block;
         }
@@ -268,19 +267,16 @@ fn can_combine(n1: &Node, n2: &Node) -> Option<RefCell<Tendril<UTF8>>> {
     }
 }
 
-/// Normalizes content before adding to buffer by:
+/// Normalizes content before adding to output by:
 /// 1. Collapsing excessive newlines (max 2 consecutive newlines)
 /// 2. Collapsing adjacent spaces between inline elements (when not in pre context)
-fn normalize_content_for_buffer(
-    last_buffer_item: Option<&String>,
-    mut content: String,
-    is_pre: bool,
-) -> String {
-    let Some(last) = last_buffer_item else {
-        return content;
-    };
+fn append_normalized_content(output: &mut String, mut content: String, is_pre: bool) {
+    if output.is_empty() {
+        output.push_str(&content);
+        return;
+    }
 
-    let last_newlines = last.chars().rev().take_while(|c| *c == '\n').count();
+    let last_newlines = output.chars().rev().take_while(|c| *c == '\n').count();
     let content_newlines = content.chars().take_while(|c| *c == '\n').count();
     let total_newlines = last_newlines + content_newlines;
 
@@ -294,33 +290,23 @@ fn normalize_content_for_buffer(
     if !is_pre
         && last_newlines == 0
         && content_newlines == 0
-        && last.chars().last().is_some_and(|c| c == ' ')
+        && output.ends_with(' ')
         && content.chars().next().is_some_and(|c| c == ' ')
     {
         content.remove(0);
     }
 
-    content
+    output.push_str(&content);
 }
 
-fn trim_buffer_end(buffer: &mut [String]) {
-    for content in buffer.iter_mut().rev() {
-        let trimmed = content.trim_end_document_whitespace();
-        if trimmed.len() == content.len() {
-            break;
-        }
-        content.truncate(trimmed.len());
-    }
+fn trim_output_end(output: &mut String) {
+    let trimmed_len = output.trim_end_document_whitespace().len();
+    output.truncate(trimmed_len);
 }
 
-fn trim_buffer_end_spaces(buffer: &mut [String]) {
-    for content in buffer.iter_mut().rev() {
-        let trimmed = content.trim_end_matches(' ');
-        if trimmed.len() == content.len() {
-            break;
-        }
-        content.truncate(trimmed.len());
-    }
+fn trim_output_end_spaces(output: &mut String) {
+    let trimmed_len = output.trim_end_matches(' ').len();
+    output.truncate(trimmed_len);
 }
 
 /// Cases:
