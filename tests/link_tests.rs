@@ -18,6 +18,14 @@ fn links() {
 }
 
 #[test]
+fn links_with_spaces_in_destination_and_title() {
+    assert_eq!(
+        r#"[Link](<https://example.com/hello world> "Hello")"#,
+        convert(r#"<a href="https://example.com/hello world" title="Hello">Link</a>"#).unwrap(),
+    );
+}
+
+#[test]
 fn links_with_spaces_around_text() {
     assert_eq!("[bla](/)", convert(r#"<a href="/"> bla </a>"#).unwrap());
     assert_eq!(

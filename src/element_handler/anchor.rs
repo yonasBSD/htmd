@@ -118,13 +118,13 @@ impl AnchorElementHandler {
             result.push('<');
         }
         result.push_str(link);
+        if has_spaces_in_link {
+            result.push('>');
+        }
         if let Some(title) = title {
             result.push_str(" \"");
             result.push_str(title);
             result.push('"');
-        }
-        if has_spaces_in_link {
-            result.push('>');
         }
         result.push(')');
         if let Some(trailing_whitespace) = trailing_whitespace {
