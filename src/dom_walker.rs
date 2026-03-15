@@ -6,7 +6,6 @@ use std::{borrow::Cow, cell::RefCell, rc::Rc};
 use crate::element_handler::ElementHandlers;
 
 use super::{
-    node_util::get_node_tag_name,
     options::TranslationMode,
     text_util::{
         TrimDocumentWhitespace, compress_whitespace, index_of_markdown_ordered_item_dot,
@@ -110,34 +109,42 @@ pub(crate) fn walk_children(
     is_pre: bool,
     // Return value: `markdown_translated`.
 ) -> bool {
-    // Combine similar adjacent blocks.
-    let mut children = node.children.borrow_mut();
-    let mut index = 1;
-    while index < children.len() {
-        if let Some(text) = can_combine(&children[index - 1], &children[index]) {
-            // Combine the text from `chidren[index]` with `children[index -
-            // 1]`, then remove `children[index]`.
-            children.remove(index);
-            index -= 1;
-            let children_of_index = children.get(index).unwrap().children.borrow();
-            let text_data = &children_of_index.first().unwrap().data;
-            let NodeData::Text { contents } = text_data else {
-                panic!("")
-            };
-            let mut inner_contents = contents.clone().into_inner();
-            inner_contents.push_tendril(&text.take());
-            contents.replace(inner_contents);
+    if node.children.borrow().len() > 1 {
+        // Combine similar adjacent blocks.
+        let mut children = node.children.borrow_mut();
+        let mut index = 1;
+        while index < children.len() {
+            if let Some(text) = can_combine(&children[index - 1], &children[index]) {
+                // Combine the text from `chidren[index]` with `children[index -
+                // 1]`, then remove `children[index]`.
+                children.remove(index);
+                index -= 1;
+                let children_of_index = children.get(index).unwrap().children.borrow();
+                let text_data = &children_of_index.first().unwrap().data;
+                let NodeData::Text { contents } = text_data else {
+                    panic!("")
+                };
+                let mut inner_contents = contents.clone().into_inner();
+                inner_contents.push_tendril(&text.take());
+                contents.replace(inner_contents);
+            }
+            index += 1;
         }
-        index += 1;
     }
-    drop(children);
 
     // Trim leading spaces of the first element/text in block elements (except pre/code)
     let mut trim_leading_spaces = !is_pre && is_parent_block_element;
-    let tag = get_node_tag_name(node);
+    let tag = match &node.data {
+        NodeData::Document => Some("html"),
+        NodeData::Element { name, .. } => Some(name.local.as_ref()),
+        _ => None,
+    };
     let mut markdown_translated = true;
     for child in node.children.borrow().iter() {
-        let is_block = get_node_tag_name(child).is_some_and(is_block_element);
+        let is_block = match &child.data {
+            NodeData::Element { name, .. } => is_block_element(&name.local),
+            _ => false,
+        };
 
         if is_block {
             // Trim trailing spaces for the previous element
