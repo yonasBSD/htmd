@@ -15,7 +15,10 @@ fn benchmark(c: &mut Criterion) {
 
 criterion_group!(
     name = benches;
-    config = Criterion::default().measurement_time(Duration::from_secs(20));
+    config = Criterion::default()
+        .warm_up_time(Duration::from_secs(10))
+        .measurement_time(Duration::from_secs(30))
+        .sample_size(200);
     targets = benchmark
 );
 criterion_main!(benches);

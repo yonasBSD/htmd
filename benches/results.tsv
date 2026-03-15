@@ -1,0 +1,20 @@
+commit	runtime_ms	status	description
+48cbdeb	17.017	keep	baseline
+48cbdeb	17.101	discard	avoid eager text-node allocations in dom walker
+48cbdeb	17.342	discard	trim joined output in place in convert()
+48cbdeb	17.275	discard	replace temporary parent-tag vec allocations with slices
+48cbdeb	17.502	discard	iterate table children by borrow instead of cloned child vectors
+48cbdeb	17.368	discard	borrow href/title in anchor handler and escape lazily
+48cbdeb	17.415	keep	baseline average of 3 sequential runs (16.995, 17.581, 17.668)
+48cbdeb	17.463	discard	reverify: avoid eager text-node allocations in dom walker (3-run avg 17.020, 17.742, 17.626)
+48cbdeb	17.877	discard	reverify: trim joined output in place in convert() (3-run avg 17.758, 17.895, 17.977)
+48cbdeb	17.986	discard	reverify: replace temporary parent-tag vec allocations with slices (3-run avg 17.872, 18.037, 18.048)
+48cbdeb	18.057	discard	reverify: iterate table children by borrow instead of cloned child vectors (3-run avg 17.848, 18.240, 18.084)
+48cbdeb	17.930	discard	reverify: borrow href/title in anchor handler and escape lazily (3-run avg 17.834, 17.913, 18.044)
+48cbdeb	18.393	discard	replace hot-path join("") calls with preallocated String concatenation helper
+48cbdeb	18.913	discard	reorder can_combine() to reject non-matching inline nodes before child borrows
+48cbdeb	18.358	discard	profile-guided: add pure-mode fast path and lower-allocation assembly in anchor handler
+48cbdeb	16.946	keep	skip child-combine mutation for single-child nodes and inline tag checks directly in walk_children
+d300ee4	17.585	discard	use slices instead of per-call parent-tag Vec allocations in table/head handlers
+d300ee4	17.442	keep	baseline average of 3 sequential runs after walk_children hot-path optimization (17.563, 17.293, 17.471)
+d300ee4	17.347	keep	baseline average of 3 sequential median-based runs after benchmark harness update (17.011, 17.153, 17.877; cv 2.19%)
