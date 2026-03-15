@@ -29,19 +29,19 @@ pub(crate) fn walk_node(
         }
 
         NodeData::Text { ref contents } => {
-            // Append the text in this node to the buffer.
-            let text = contents.borrow().to_string();
+            let text = contents.borrow();
+            let text = text.as_ref();
             if is_pre {
                 // Handle pre and code
                 let text = if parent_tag.is_some_and(|t| t == "pre") {
-                    escape_pre_text_if_needed(text)
+                    escape_pre_text_if_needed(Cow::Borrowed(text))
                 } else {
-                    text
+                    Cow::Borrowed(text)
                 };
-                buffer.push(text);
+                buffer.push(text.into_owned());
             } else {
                 // Handle other elements or texts
-                let text = escape_if_needed(Cow::Owned(text));
+                let text = escape_if_needed(Cow::Borrowed(text));
                 let text = compress_whitespace(text.as_ref());
 
                 let to_add = if trim_leading_spaces
@@ -352,15 +352,16 @@ fn escape_if_needed(text: Cow<'_, str>) -> Cow<'_, str> {
 /// Cases:
 /// '```' -> '\```' // code fence
 /// '~~~' -> '\~~~' // code fence
-fn escape_pre_text_if_needed(text: String) -> String {
+fn escape_pre_text_if_needed(text: Cow<'_, str>) -> Cow<'_, str> {
     let Some(first) = text.chars().next() else {
         return text;
     };
     match first {
         '`' | '~' => {
-            let mut text = text;
-            text.insert(0, '\\');
-            text
+            let mut escaped = String::with_capacity(text.len() + 1);
+            escaped.push('\\');
+            escaped.push_str(text.as_ref());
+            Cow::Owned(escaped)
         }
         _ => text,
     }
