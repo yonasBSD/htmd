@@ -95,6 +95,42 @@ mod table_tests_1 {
     }
 
     #[test]
+    fn test_table_with_thead_td_headers() {
+        let html = r#"
+        <table>
+            <thead>
+                <tr>
+                    <td>Name</td>
+                    <td>Age</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>John</td>
+                    <td>35</td>
+                </tr>
+                <tr>
+                    <td>Jane</td>
+                    <td>28</td>
+                </tr>
+            </tbody>
+        </table>
+        "#;
+
+        let expected = r#"
+| Name | Age |
+| ---- | --- |
+| John | 35  |
+| Jane | 28  |
+"#
+        .trim();
+
+        let markdown = htmd::HtmlToMarkdown::new().convert(html).unwrap();
+        let result = markdown.trim();
+        assert_eq!(expected, result);
+    }
+
+    #[test]
     fn test_table_with_caption() {
         let html = r#"
         <table>

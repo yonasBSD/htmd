@@ -192,7 +192,7 @@ fn has_explicit_headers(node: &Rc<markup5ever_rcdom::Node>) -> bool {
                 if !is_root && tag_name == "table" {
                     continue;
                 }
-                if tag_name == "th" {
+                if matches!(tag_name, "th" | "thead") {
                     return true;
                 }
             }
