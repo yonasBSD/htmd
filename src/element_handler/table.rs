@@ -1,6 +1,6 @@
 use crate::element_handler::element_util::serialize_element;
 use crate::element_handler::{Element, HandlerResult, Handlers};
-use crate::node_util::{get_node_children, get_node_tag_name};
+use crate::node_util::{get_node_children, get_node_tag_name, get_parent_node};
 use crate::options::TranslationMode;
 use crate::serialize_if_faithful;
 use crate::text_util::{TrimDocumentWhitespace, concat_strings};
@@ -17,6 +17,12 @@ use std::rc::Rc;
 /// ```
 pub(crate) fn table_handler(handlers: &dyn Handlers, element: Element) -> Option<HandlerResult> {
     serialize_if_faithful!(handlers, element, 0);
+    if handlers.options().translation_mode == TranslationMode::Pure
+        && (!has_explicit_headers(element.node) || is_inside_table_cell(element.node))
+    {
+        return handlers.fallback(element);
+    }
+
     // All child table elements must be markdown translated to markdown
     // translate the table in faithful mode.
     // We track markdown translation status manually because we iterate children
@@ -176,6 +182,43 @@ pub(crate) fn table_handler(handlers: &dyn Handlers, element: Element) -> Option
 
     table_md.push('\n');
     Some(table_md.into())
+}
+
+fn has_explicit_headers(node: &Rc<markup5ever_rcdom::Node>) -> bool {
+    fn visit(node: &Rc<markup5ever_rcdom::Node>, is_root: bool) -> bool {
+        for child in get_node_children(node) {
+            if let NodeData::Element { name, .. } = &child.data {
+                let tag_name = name.local.as_ref();
+                if !is_root && tag_name == "table" {
+                    continue;
+                }
+                if tag_name == "th" {
+                    return true;
+                }
+            }
+
+            if visit(&child, false) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    visit(node, true)
+}
+
+fn is_inside_table_cell(node: &Rc<markup5ever_rcdom::Node>) -> bool {
+    let mut current = get_parent_node(node);
+
+    while let Some(parent) = current {
+        if get_node_tag_name(&parent).is_some_and(|tag| matches!(tag, "td" | "th")) {
+            return true;
+        }
+        current = get_parent_node(&parent);
+    }
+
+    false
 }
 
 /// Extract cells from a row node
