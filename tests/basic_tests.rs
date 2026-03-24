@@ -688,3 +688,58 @@ fn document_whitespace() {
         .unwrap()
     );
 }
+
+// Multi-byte UTF-8 characters before a markdown ordered list dot must not
+// cause a panic due to byte/char index confusion in escape_text.
+#[test]
+fn multibyte_ordered_list_escape_half() {
+    // U+00BD (½) is 2 bytes in UTF-8
+    let md = convert("<p>2½. Long shot</p>").unwrap();
+    assert_eq!(r"2½\. Long shot", md);
+}
+
+#[test]
+fn multibyte_ordered_list_escape_accented() {
+    // e-acute before dot -- not numeric, so the dot is not an ordered list marker
+    let md = convert("<p>1é. text</p>").unwrap();
+    assert_eq!(r"1é. text", md);
+}
+
+#[test]
+fn multibyte_ordered_list_escape_trademark() {
+    // trademark symbol is not numeric
+    let md = convert("<p>3™. text</p>").unwrap();
+    assert_eq!(r"3™. text", md);
+}
+
+#[test]
+fn ascii_ordered_list_escape() {
+    let md = convert("<p>10. normal</p>").unwrap();
+    assert_eq!(r"10\. normal", md);
+}
+
+#[test]
+fn multibyte_no_dot() {
+    // No dot, should not be affected
+    let md = convert("<p>2½</p>").unwrap();
+    assert_eq!("2½", md);
+}
+
+#[test]
+fn cjk_before_ordered_list() {
+    // CJK chars are not numeric in Rust's is_numeric(), so this is not an ordered list pattern
+    let md = convert("<p>日本語1. test</p>").unwrap();
+    assert_eq!(r"日本語1. test", md);
+}
+
+#[test]
+fn multibyte_atx_heading_escape() {
+    let md = convert("<p># héading</p>").unwrap();
+    assert_eq!(r"\# héading", md);
+}
+
+#[test]
+fn multibyte_atx_heading_escape_umlaut() {
+    let md = convert("<p>## über</p>").unwrap();
+    assert_eq!(r"\## über", md);
+}

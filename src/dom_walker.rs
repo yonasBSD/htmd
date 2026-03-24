@@ -42,12 +42,12 @@ pub(crate) fn walk_node(
             } else {
                 let last_ends_with_space = output.ends_with(' ');
                 if is_plain_text(text) {
-                    let text = if trim_leading_spaces || (text.starts_with(' ') && last_ends_with_space)
-                    {
-                        text.trim_start_matches(' ')
-                    } else {
-                        text
-                    };
+                    let text =
+                        if trim_leading_spaces || (text.starts_with(' ') && last_ends_with_space) {
+                            text.trim_start_matches(' ')
+                        } else {
+                            text
+                        };
                     if !text.is_empty() {
                         output.push_str(text);
                     }
@@ -59,8 +59,7 @@ pub(crate) fn walk_node(
                 let text = compress_whitespace(text.as_ref());
 
                 let to_add = if trim_leading_spaces
-                    || (text.chars().next().is_some_and(|ch| ch == ' ')
-                        && last_ends_with_space)
+                    || (text.chars().next().is_some_and(|ch| ch == ' ') && last_ends_with_space)
                 {
                     // We can't compress spaces between two text blocks/elements, so we
                     // compress them here by trimming the leading space of current text
