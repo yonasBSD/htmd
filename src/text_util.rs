@@ -261,8 +261,9 @@ pub(crate) fn is_markdown_atx_heading(text: &str) -> bool {
 
 pub(crate) fn index_of_markdown_ordered_item_dot(text: &str) -> Option<usize> {
     let mut is_prev_ch_numeric = false;
+    let mut dot_byte_offset = 0;
     let mut is_prev_ch_dot = false;
-    for (index, ch) in text.chars().enumerate() {
+    for (byte_offset, ch) in text.char_indices() {
         if ch.is_numeric() {
             if is_prev_ch_dot {
                 return None;
@@ -272,10 +273,11 @@ pub(crate) fn index_of_markdown_ordered_item_dot(text: &str) -> Option<usize> {
             if !is_prev_ch_numeric {
                 return None;
             }
+            dot_byte_offset = byte_offset;
             is_prev_ch_dot = true;
         } else if ch == ' ' {
             if is_prev_ch_dot {
-                return Some(index - 1);
+                return Some(dot_byte_offset);
             } else {
                 return None;
             }
@@ -320,5 +322,13 @@ mod tests {
         assert_eq!(None, index_of_markdown_ordered_item_dot(" 1. "));
         assert_eq!(None, index_of_markdown_ordered_item_dot("1.a "));
         assert_eq!(None, index_of_markdown_ordered_item_dot("1."));
+    }
+
+    #[test]
+    fn test_index_of_markdown_ordered_item_dot_multibyte() {
+        // U+00BD (½) is 2 bytes in UTF-8: the dot byte offset is 3, not 2
+        assert_eq!(Some(3), index_of_markdown_ordered_item_dot("2½. text"));
+        // No dot, should return None
+        assert_eq!(None, index_of_markdown_ordered_item_dot("2½"));
     }
 }
