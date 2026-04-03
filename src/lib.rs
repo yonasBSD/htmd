@@ -12,7 +12,9 @@ use element_handler::{ElementHandler, ElementHandlers};
 use html5ever::tendril::TendrilSink;
 use html5ever::tree_builder::TreeBuilderOpts;
 use html5ever::{Attribute, ParseOpts, parse_document};
-use markup5ever_rcdom::{Node, RcDom};
+// Export publicly, providing an interface to the
+pub use markup5ever_rcdom::Node;
+use markup5ever_rcdom::RcDom;
 use options::Options;
 
 use crate::element_handler::Handlers;
@@ -120,8 +122,9 @@ impl HtmlToMarkdown {
         Ok(dom.document)
     }
 
-    /// Convert a DOM tree to Markdown.
-    pub fn tree_to_markdown(&self, tree: &Rc<Node>) -> std::io::Result<String> {
+    /// Convert a DOM tree to Markdown. For convenience, `Node` is re-exported;
+    /// simply `use htmd::Node;` to access this type.
+    pub fn tree_to_markdown(&self, tree: &Rc<Node>) -> String {
         let mut content = String::new();
 
         walk_node(tree, &mut content, &self.handlers, None, true, false);
@@ -138,12 +141,12 @@ impl HtmlToMarkdown {
 
         content.push_str(append.trim_end_matches('\n'));
 
-        Ok(content)
+        content
     }
 
     /// Convert HTML to Markdown.
     pub fn convert(&self, html: &str) -> std::io::Result<String> {
-        self.tree_to_markdown(&self.html_to_tree(html)?)
+        Ok(self.tree_to_markdown(&self.html_to_tree(html)?))
     }
 }
 
