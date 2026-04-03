@@ -12,7 +12,9 @@ use element_handler::{ElementHandler, ElementHandlers};
 use html5ever::tendril::TendrilSink;
 use html5ever::tree_builder::TreeBuilderOpts;
 use html5ever::{Attribute, ParseOpts, parse_document};
-use markup5ever_rcdom::{Node, RcDom};
+// Export publicly, providing an interface to the
+pub use markup5ever_rcdom::Node;
+use markup5ever_rcdom::RcDom;
 use options::Options;
 
 use crate::element_handler::Handlers;
@@ -102,8 +104,8 @@ impl HtmlToMarkdown {
         HtmlToMarkdownBuilder::new()
     }
 
-    /// Convert HTML to Markdown.
-    pub fn convert(&self, html: &str) -> std::io::Result<String> {
+    /// Convert HTML to a DOM tree.
+    pub fn html_to_tree(&self, html: &str) -> std::io::Result<Rc<Node>> {
         let dom = parse_document(
             RcDom::default(),
             ParseOpts {
@@ -117,16 +119,15 @@ impl HtmlToMarkdown {
         .from_utf8()
         .read_from(&mut html.as_bytes())?;
 
+        Ok(dom.document)
+    }
+
+    /// Convert a DOM tree to Markdown. For convenience, `Node` is re-exported;
+    /// simply `use htmd::Node;` to access this type.
+    pub fn tree_to_markdown(&self, tree: &Rc<Node>) -> String {
         let mut content = String::new();
 
-        walk_node(
-            &dom.document,
-            &mut content,
-            &self.handlers,
-            None,
-            true,
-            false,
-        );
+        walk_node(tree, &mut content, &self.handlers, None, true, false);
 
         let mut content = content.trim_matches(|ch| ch == '\n').to_string();
 
@@ -140,7 +141,12 @@ impl HtmlToMarkdown {
 
         content.push_str(append.trim_end_matches('\n'));
 
-        Ok(content)
+        content
+    }
+
+    /// Convert HTML to Markdown.
+    pub fn convert(&self, html: &str) -> std::io::Result<String> {
+        Ok(self.tree_to_markdown(&self.html_to_tree(html)?))
     }
 }
 
